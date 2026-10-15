@@ -13,7 +13,8 @@ from database import (
     update_application_status,
     save_funding_record,
     save_repayment,
-    load_repayments
+    load_repayments,
+    reset_database,
 )
 
 
@@ -24,6 +25,26 @@ st.set_page_config(
     layout="wide"
 )
 initialize_database()
+st.sidebar.divider()
+st.sidebar.subheader("Database Reset")
+
+if st.sidebar.button("🗑️ Clear All Old Data"):
+    st.session_state.confirm_reset = True
+
+if st.session_state.get("confirm_reset", False):
+    st.sidebar.warning("This will permanently delete all applications, funding, and repayment records.")
+
+    if st.sidebar.button("Yes, delete all data"):
+        reset_database()
+        st.session_state.applications = []
+        st.session_state.funding_records = []
+        st.session_state.confirm_reset = False
+        st.sidebar.success("All old records have been cleared.")
+        st.rerun()
+
+    if st.sidebar.button("Cancel Reset"):
+        st.session_state.confirm_reset = False
+        st.rerun()
 
 st.markdown("""
 <style>
