@@ -25,26 +25,55 @@ st.set_page_config(
     layout="wide"
 )
 initialize_database()
+
 st.sidebar.divider()
-st.sidebar.subheader("Database Reset")
+st.sidebar.subheader("🔐 Admin Reset")
 
-if st.sidebar.button("🗑️ Clear All Old Data"):
-    st.session_state.confirm_reset = True
+if "admin_authenticated" not in st.session_state:
+    st.session_state.admin_authenticated = False
 
-if st.session_state.get("confirm_reset", False):
-    st.sidebar.warning("This will permanently delete all applications, funding, and repayment records.")
+if not st.session_state.admin_authenticated:
+    admin_password = st.sidebar.text_input(
+        "Admin password",
+        type="password",
+        key="admin_password"
+    )
 
-    if st.sidebar.button("Yes, delete all data"):
-        reset_database()
-        st.session_state.applications = []
-        st.session_state.funding_records = []
+    if st.sidebar.button("Unlock reset controls"):
+        expected_password = st.secrets.get("ADMIN_PASSWORD", "")
+
+        if expected_password and admin_password == expected_password:
+            st.session_state.admin_authenticated = True
+            st.rerun()
+        else:
+            st.sidebar.error("Incorrect password.")
+else:
+    if st.sidebar.button("🔒 Lock reset controls"):
+        st.session_state.admin_authenticated = False
         st.session_state.confirm_reset = False
-        st.sidebar.success("All old records have been cleared.")
         st.rerun()
 
-    if st.sidebar.button("Cancel Reset"):
-        st.session_state.confirm_reset = False
-        st.rerun()
+    if st.sidebar.button("🗑️ Clear All Old Data"):
+        st.session_state.confirm_reset = True
+
+    if st.session_state.get("confirm_reset", False):
+        st.sidebar.warning(
+            "This will permanently delete all applications, "
+            "funding, and repayment records."
+        )
+
+        if st.sidebar.button("Yes, delete all data"):
+            reset_database()
+            st.session_state.applications = []
+            st.session_state.funding_records = []
+            st.session_state.confirm_reset = False
+            st.sidebar.success("All old records have been cleared.")
+            st.rerun()
+
+        if st.sidebar.button("Cancel Reset"):
+            st.session_state.confirm_reset = False
+            st.rerun()
+
 
 st.markdown("""
 <style>
